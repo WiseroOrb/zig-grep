@@ -83,77 +83,56 @@ pub fn main() !void {
 }
 
 fn compute_lps(pattern: []const u8, lps_table: []usize) void {
-    lps_table[0] = 0;
-
-    // lets start from index 1 as index 0
-    // of LPS slice already contains a value
-    var i: usize = 1;
-
-    // lenght of previous longest proper
-    // prefix that is also a suffix
+    //zero initialization of lps_table
+    for(lps_table) |*v| v.* = 0;
+    
     var longest_lps: usize = 0;
-
-    while (i < pattern.len) {
-        if (pattern[longest_lps] == pattern[i]) {
-            longest_lps += 1;
-            lps_table[i] = longest_lps;
-            i += 1;
-        } else {
-            if (longest_lps > 0) {
-                longest_lps = lps_table[longest_lps - 1];
-            } else {
-                lps_table[i] = 0;
-                i += 1;
-            }
-        }
+	//start from the second character
+    for(pattern[1..]) |pattern_char, i| {
+    	//lps_table walk
+    	while (pattern_char != pattern[longest_lps]) {
+    		if (longest_lps == 0) break;
+    		longest_lps = lps_table[longest_lps-1];
+    	} else {
+    		longest_lps += 1;
+    		lps_table[i+1] = longest_lps;
+    	}
     }
 }
 
+
+
 fn grep(text_buf: []u8, pattern: []const u8, lps_table: []const usize) !void {
-    var pattern_idx: usize = 0;
-    var text_idx: usize = 0;
-
-    while (text_idx < text_buf.len) {
-        if (pattern[pattern_idx] == text_buf[text_idx]) {
-            pattern_idx += 1;
-            text_idx += 1;
-
-            // we found a match
-            if (pattern_idx == pattern.len) {
-                pattern_idx = 0;
-
-                var foward: usize = text_idx;
-                while (foward < text_buf.len) {
-                    if (text_buf[foward] == '\n' or ascii.isSpace(text_buf[foward])) {
-                        break;
-                    }
-
-                    foward += 1;
-                }
-
-                // start from the begining of the text that matches the pattern
-                var backward: usize = text_idx - pattern.len;
-                while (backward > 0) {
-                    if (text_buf[backward] == '\n' or ascii.isSpace(text_buf[backward])) {
-                        // since we are in a new line or a space character we should
-                        // remove it, so we increase the backward by one getting back
-                        // to the place after the space
-                        backward += 1;
-                        break;
-                    }
-
-                    backward -= 1;
-                }
-
-                std.debug.print("{s}\n", .{text_buf[backward..foward]});
-            }
-        } else if (pattern_idx > 0) {
-            pattern_idx = lps_table[pattern_idx - 1];
-        } else {
-            pattern_idx = 0;
-            text_idx += 1;
-        }
-    }
+    var pattern_idx : usize = 0;
+	
+	for (text_buf) |text_char, text_idx|{
+		// first lps walk
+		while (pattern[pattern_idx] != text_char){
+			if (pattern_idx == 0) break;
+			pattern_idx = lps_table[pattern_idx-1];
+		} else {
+			// found a match
+			pattern_idx += 1;
+			
+			//pattern matched
+			if (pattern_idx == pattern.len) {
+				pattern_idx = 0;
+				
+				var forward: usize = text_idx + 1;
+				while (forward < text_buf.len) : (forward +=1) {
+					const test_char: u8 = text_buf[forward];
+					if (test_char == '\n' or ascii.isSpace(test_char)) break;
+				}
+				
+				var backward: usize = 1 + text_idx - pattern.len;
+				while (backward > 0) : (backward -= 1){
+					const test_char: u8 = text_buf[backward - 1];
+					if (test_char == '\n' or ascii.isSpace(test_char)) break;
+				}
+				std.debug.print("{s}\n", .{text_buf[backward..forward]});
+			}
+		}
+	}
 }
 
 // TODO: test case sensitivity
