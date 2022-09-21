@@ -87,16 +87,16 @@ fn compute_lps(pattern: []const u8, lps_table: []usize) void {
     for(lps_table) |*v| v.* = 0;
     
     var longest_lps: usize = 0;
-	//start from the second character
+    //start from the second character
     for(pattern[1..]) |pattern_char, i| {
-    	//lps_table walk
-    	while (pattern_char != pattern[longest_lps]) {
-    		if (longest_lps == 0) break;
-    		longest_lps = lps_table[longest_lps-1];
-    	} else {
-    		longest_lps += 1;
-    		lps_table[i+1] = longest_lps;
-    	}
+        //lps_table walk
+        while (pattern_char != pattern[longest_lps]) {
+            if (longest_lps == 0) break;
+            longest_lps = lps_table[longest_lps-1];
+        } else {
+            longest_lps += 1;
+            lps_table[i+1] = longest_lps;
+        }
     }
 }
 
@@ -104,35 +104,35 @@ fn compute_lps(pattern: []const u8, lps_table: []usize) void {
 
 fn grep(text_buf: []u8, pattern: []const u8, lps_table: []const usize) !void {
     var pattern_idx : usize = 0;
-	
-	for (text_buf) |text_char, text_idx|{
-		// first lps walk
-		while (pattern[pattern_idx] != text_char){
-			if (pattern_idx == 0) break;
-			pattern_idx = lps_table[pattern_idx-1];
-		} else {
-			// found a match
-			pattern_idx += 1;
-			
-			//pattern matched
-			if (pattern_idx == pattern.len) {
-				pattern_idx = 0;
-				
-				var forward: usize = text_idx + 1;
-				while (forward < text_buf.len) : (forward +=1) {
-					const test_char: u8 = text_buf[forward];
-					if (test_char == '\n' or ascii.isSpace(test_char)) break;
-				}
-				
-				var backward: usize = 1 + text_idx - pattern.len;
-				while (backward > 0) : (backward -= 1){
-					const test_char: u8 = text_buf[backward - 1];
-					if (test_char == '\n' or ascii.isSpace(test_char)) break;
-				}
-				std.debug.print("{s}\n", .{text_buf[backward..forward]});
-			}
-		}
-	}
+    
+    for (text_buf) |text_char, text_idx|{
+        // first lps walk
+        while (pattern[pattern_idx] != text_char){
+            if (pattern_idx == 0) break;
+            pattern_idx = lps_table[pattern_idx-1];
+        } else {
+            // found a match
+            pattern_idx += 1;
+            
+            //pattern matched
+            if (pattern_idx == pattern.len) {
+                pattern_idx = 0;
+                
+                var forward: usize = text_idx + 1;
+                while (forward < text_buf.len) : (forward +=1) {
+                    const test_char: u8 = text_buf[forward];
+                    if (test_char == '\n' or ascii.isSpace(test_char)) break;
+                }
+                
+                var backward: usize = 1 + text_idx - pattern.len;
+                while (backward > 0) : (backward -= 1){
+                    const test_char: u8 = text_buf[backward - 1];
+                    if (test_char == '\n' or ascii.isSpace(test_char)) break;
+                }
+                std.debug.print("{s}\n", .{text_buf[backward..forward]});
+            }
+        }
+    }
 }
 
 // TODO: test case sensitivity
